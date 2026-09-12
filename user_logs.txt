@@ -1,0 +1,1 @@
+{"timestamp":"2026-09-12T18:07:45.349Z","type":"session-advanced","ip":"::1","data":{"sessionId":"sess_x2ymho7","entryTime":"2026-09-12T18:07:33.366Z","exitTime":"2026-09-12T18:07:45.296Z","durationSeconds":12,"filesConverted":0}}

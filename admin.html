@@ -1,0 +1,111 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>OmniConvert Admin</title>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f7fafc;color:#111}
+    .card{background:white;padding:16px;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,0.06);max-width:900px;margin:auto}
+    table{width:100%;border-collapse:collapse;margin-top:12px}
+    th,td{padding:8px;border-bottom:1px solid #eee;text-align:left}
+    th{background:#fafafa}
+  </style>
+</head>
+<body>
+  <!doctype html>
+  <html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>OmniConvert — Usage Dashboard (Local)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+      :root{--bg:#0f1724;--card:#0b1220;--muted:#9aa7bf;--accent:#60a5fa}
+      body{font-family:Inter,system-ui,Segoe UI,Roboto,Arial;background:linear-gradient(180deg,#071026,#071a2b);color:#e6eef8;margin:0;padding:28px}
+      .container{max-width:1100px;margin:0 auto}
+      .top{display:flex;align-items:center;justify-content:space-between;gap:16px}
+      h1{font-size:1.25rem;margin:0}
+      .card{background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));padding:20px;border-radius:12px;box-shadow:0 8px 30px rgba(2,6,23,0.6);margin-top:16px}
+      .stats{display:flex;gap:12px}
+      .stat{flex:1;padding:14px;background:rgba(255,255,255,0.03);border-radius:10px}
+      .stat .num{font-weight:700;font-size:1.4rem}
+      table{width:100%;border-collapse:collapse;margin-top:12px;color:#dce9ff}
+      th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,0.04);text-align:left}
+      th{color:var(--muted);font-weight:600;font-size:0.85rem}
+      .small{font-size:0.85rem;color:var(--muted)}
+      .hash{font-family:monospace;font-size:0.8rem;color:#9fb7dd}
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="top">
+        <h1>OmniConvert — Local Usage Dashboard</h1>
+        <div class="small">Local-only admin view — accessible only from this machine</div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px">
+          <div>
+            <div class="small">Total users (unique hashed IDs)</div>
+            <div class="num" id="total-users">—</div>
+          </div>
+          <div>
+            <div class="small">Combined time (hh:mm:ss)</div>
+            <div class="num" id="total-time">—</div>
+          </div>
+          <div>
+            <div class="small">Last update</div>
+            <div class="num" id="last-updated">—</div>
+          </div>
+        </div>
+
+        <div style="margin-top:16px">
+          <div class="small">Users</div>
+          <table id="users-table">
+            <thead><tr><th>User (hashed)</th><th>Total Time</th><th>Sessions</th><th>Files Converted</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function secondsToHms(d) {
+        d = Number(d);
+        const h = Math.floor(d / 3600);
+        const m = Math.floor(d % 3600 / 60);
+        const s = Math.floor(d % 60);
+        return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+      }
+
+      async function loadStats(){
+        try {
+          const res = await fetch('/api/stats');
+          if (!res.ok) throw new Error('Unauthorized or not local');
+          const stats = await res.json();
+          document.getElementById('total-users').innerText = stats.totalUsers || 0;
+          document.getElementById('total-time').innerText = secondsToHms(stats.totalTimeSeconds || 0);
+          document.getElementById('last-updated').innerText = new Date().toLocaleTimeString();
+          const tbody = document.querySelector('#users-table tbody');
+          tbody.innerHTML = '';
+          const users = stats.users || {};
+          Object.keys(users).forEach(id => {
+            const u = users[id];
+            const tr = document.createElement('tr');
+            const tdId = document.createElement('td'); tdId.innerHTML = `<span class="hash">${id.slice(0,10)}…</span>`;
+            const tdTime = document.createElement('td'); tdTime.innerText = secondsToHms(u.totalTimeSeconds || 0);
+            const tdSessions = document.createElement('td'); tdSessions.innerText = (u.sessions || []).length;
+            const tdFiles = document.createElement('td'); tdFiles.innerText = (u.sessions || []).reduce((s, sess) => s + (sess.filesConverted||0), 0);
+            tr.appendChild(tdId); tr.appendChild(tdTime); tr.appendChild(tdSessions); tr.appendChild(tdFiles);
+            tbody.appendChild(tr);
+          });
+        } catch (e) {
+          document.querySelector('.container').innerHTML = `<div style="color:#fca5a5;padding:20px;background:#2b0b0b;border-radius:10px">Unable to load stats: ${e.message}</div>`;
+        }
+      }
+      loadStats();
+      setInterval(loadStats, 4000);
+    </script>
+  </body>
+  </html>

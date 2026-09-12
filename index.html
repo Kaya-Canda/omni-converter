@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OmniConvert Studio - Local File Converter</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    /* CSS RESET & VARIABLES */
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    
+    :root {
+      --bg-color: #fcfcfd;
+      --card-bg: #ffffff;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      --brand-red: #ef4444;
+      --brand-red-hover: #dc2626;
+      --brand-light-red: #fef2f2;
+      --brand-border-red: #fecaca;
+    }
+
+    body.dark {
+      --bg-color: #090d16;
+      --card-bg: #111827;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #1f2937;
+      --brand-light-red: #2a1215;
+      --brand-border-red: #451a1d;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      /* Subtle Grid Background Pattern */
+      background-image: 
+        radial-gradient(var(--border-color) 1px, transparent 1px);
+      background-size: 24px 24px;
+      transition: background-color 0.2s ease;
+    }
+
+    /* HEADER */
+    header {
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .header-container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .logo-area { display: flex; align-items: center; gap: 12px; }
+    .logo-icon {
+      background: linear-gradient(135deg, var(--brand-red), #b91c1c);
+      color: white;
+      padding: 8px 10px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    }
+    .logo-text { font-size: 1.25rem; font-weight: 800; tracking-tight; }
+    .badge-pro {
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 99px;
+      background: var(--brand-light-red);
+      color: var(--brand-red);
+      border: 1px solid var(--brand-border-red);
+      font-weight: 700;
+      margin-left: 6px;
+    }
+
+    /* NAVIGATION TABS */
+    nav {
+      display: flex;
+      gap: 4px;
+      background: var(--bg-color);
+      padding: 4px;
+      border-radius: 14px;
+      border: 1px solid var(--border-color);
+    }
+    .nav-btn {
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .nav-btn:hover { color: var(--text-main); }
+    .nav-btn.active {
+      background: var(--card-bg);
+      color: var(--brand-red);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    }
+
+    /* MAIN CONTAINER */
+    main {
+      max-width: 850px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 40px 24px;
+      flex-grow: 1;
+    }
+
+    .alert-banner {
+      background: var(--brand-light-red);
+      border: 1px solid var(--brand-border-red);
+      border-radius: 14px;
+      padding: 14px 18px;
+      font-size: 0.8rem;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .alert-banner i { color: var(--brand-red); margin-right: 8px; font-size: 1rem; }
+
+    /* CARDS & TAB CONTENT */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 36px;
+      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .card-header { text-align: center; margin-bottom: 24px; }
+    .card-header h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 6px; }
+    .card-header p { font-size: 0.85rem; color: var(--text-muted); }
+
+    /* DROP ZONE */
+    .drop-zone {
+      border: 2px dashed var(--brand-border-red);
+      background: var(--brand-light-red);
+      border-radius: 16px;
+      padding: 40px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .drop-zone:hover {
+      border-color: var(--brand-red);
+      transform: translateY(-2px);
+    }
+    .drop-icon {
+      width: 50px;
+      height: 50px;
+      background: white;
+      color: var(--brand-red);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 12px auto;
+      font-size: 1.25rem;
+      box-shadow: 0 4px 10px rgba(239, 68, 68, 0.15);
+    }
+
+    /* FORM ELEMENTS & BUTTONS */
+    .form-group { margin-top: 20px; }
+    label { display: block; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+    select, input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-color);
+      color: var(--text-main);
+      outline: none;
+      font-weight: 500;
+    }
+    select:focus { border-color: var(--brand-red); }
+
+    .btn-primary {
+      width: 100%;
+      margin-top: 24px;
+      padding: 14px;
+      background: linear-gradient(135deg, var(--brand-red), var(--brand-red-hover));
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3);
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+    }
+
+    /* FOOTER & MODALS */
+    footer {
+      border-top: 1px solid var(--border-color);
+      background: var(--card-bg);
+      padding: 20px 24px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    .footer-container {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 100;
+    }
+    .modal.hidden { display: none; }
+    .modal-content {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      max-width: 500px;
+      width: 100%;
+      padding: 24px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .tool-list { display:flex; flex-direction:column; gap:6px; }
+    .tool-item { background:transparent; border:1px solid var(--border-color); color:var(--text-main); padding:8px 10px; border-radius:8px; text-align:left; cursor:pointer; font-weight:600 }
+    .tool-item:hover { background:var(--card-bg); }
+  </style>
+</head>
+<body>
+
+  <!-- Header Navigation -->
+  <header>
+    <div class="header-container">
+      <div class="logo-area">
+        <div class="logo-icon"><i class="fa-solid fa-arrows-rotate"></i></div>
+        <div class="logo-text">OmniConvert</div>
+      </div>
+
+      <nav>
+        <button onclick="switchTab('image-tab', this)" class="nav-btn active"><i class="fa-solid fa-image"></i> Image Studio</button>
+        <button onclick="switchTab('media-tab', this)" class="nav-btn"><i class="fa-solid fa-film"></i> Media Tools</button>
+        <button onclick="switchTab('settings-tab', this)" class="nav-btn"><i class="fa-solid fa-sliders"></i> Settings</button>
+      </nav>
+
+      <div style="display:flex; align-items:center; gap:8px;">
+        <button id="tools-menu-btn" class="nav-btn" style="border:1px solid var(--border-color); background:transparent; padding:8px 12px;" aria-expanded="false"><i class="fa-solid fa-list"></i> All Tools</button>
+        <button onclick="toggleTheme()" class="nav-btn" style="border: 1px solid var(--border-color);"><i id="theme-icon" class="fa-solid fa-moon"></i></button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Tools Panel (collapsible) -->
+  <div id="tools-panel" style="display:none; position:relative; max-width:1100px; margin:0 auto; padding:0 24px;">
+    <div style="background:var(--card-bg); border:1px solid var(--border-color); border-radius:12px; margin-top:8px; padding:12px 16px; box-shadow:0 6px 18px rgba(2,6,23,0.05);">
+      <div style="display:flex; gap:24px;">
+        <div style="flex:1; min-width:180px;">
+          <h4 style="margin:0 0 8px 0; font-size:0.9rem;">Image Tools</h4>
+          <div class="tool-list">
+            <button class="tool-item">PNG → JPG</button>
+            <button class="tool-item">JPG → PNG</button>
+            <button class="tool-item">WEBP → PNG</button>
+            <button class="tool-item">PNG → WEBP</button>
+            <button class="tool-item">Resize / Compress</button>
+          </div>
+        </div>
+
+        <div style="flex:1; min-width:180px;">
+          <h4 style="margin:0 0 8px 0; font-size:0.9rem;">Video Tools</h4>
+          <div class="tool-list">
+            <button class="tool-item">MP4 → MP3 (Extract)</button>
+            <button class="tool-item">MP4 → GIF</button>
+            <button class="tool-item">MOV → MP4</button>
+            <button class="tool-item">MP4 → WEBM</button>
+            <button class="tool-item">Trim / Clip</button>
+          </div>
+        </div>
+
+        <div style="flex:1; min-width:180px;">
+          <h4 style="margin:0 0 8px 0; font-size:0.9rem;">GIF Tools</h4>
+          <div class="tool-list">
+            <button class="tool-item">GIF → MP4</button>
+            <button class="tool-item">GIF → WEBP</button>
+            <button class="tool-item">Optimize GIF</button>
+            <button class="tool-item">Split Frames</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Container -->
+  <main>
+
+    <!-- Local Security Banner -->
+    <div class="alert-banner">
+      <div><i class="fa-solid fa-shield-halved"></i> <strong>100% Client-Side Conversion:</strong> Files are processed locally inside your browser. Nothing is uploaded to a remote server.</div>
+      <span style="font-family: monospace; font-size: 0.75rem;">v3.2.0</span>
+    </div>
+
+    <!-- TAB 1: IMAGE STUDIO -->
+    <section id="image-tab" class="tab-content active">
+      <div class="card">
+        <div class="card-header">
+          <h2>Image Format Converter</h2>
+          <p>Convert PNG, JPG, WEBP, and BMP images instantly.</p>
+        </div>
+
+        <div id="image-drop-zone" class="drop-zone">
+          <div class="drop-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+          <p id="image-drop-text" style="font-weight: 600;">Click or Drag & Drop Image Here</p>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">PNG, JPG, WEBP formats supported</p>
+          <input type="file" id="image-file-input" style="display:none;" accept="image/*">
+          <div style="margin-top:12px; display:flex; gap:8px; align-items:center;">
+            <input id="image-url-input" type="text" placeholder="Paste an image URL (https://...)" style="flex:1; padding:10px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-color); color:var(--text-main);">
+            <button id="image-url-btn" class="btn-primary" style="padding:10px 12px; width:auto;">Fetch & Convert</button>
+          </div>
+        </div>
+
+        <div id="image-action-area" style="display:none;" class="form-group">
+          <label>Target Format</label>
+          <select id="image-format-select">
+            <option value="image/png">PNG (.png)</option>
+            <option value="image/jpeg">JPG (.jpg)</option>
+            <option value="image/webp">WEBP (.webp)</option>
+          </select>
+
+          <button id="image-convert-btn" class="btn-primary">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Convert & Download Image
+          </button>
+          <div id="image-progress" style="display:none; margin-top:12px;">
+            <div style="height:10px;background:#e6e6e6;border-radius:6px;overflow:hidden;"><div id="image-progress-bar" style="width:0%;height:100%;background:linear-gradient(90deg,#34d399,#059669);"></div></div>
+            <div id="image-progress-text" style="font-size:0.85rem;color:var(--text-muted);margin-top:6px;">Preparing...</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: MEDIA TOOLS (SERVER-CONVERT) -->
+    <section id="media-tab" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <h2>Video & Audio Converter</h2>
+          <p>Convert video/audio and create GIFs. Uses local server fallback for reliable conversions.</p>
+        </div>
+
+        <div id="media-drop-zone" class="drop-zone">
+          <div class="drop-icon"><i class="fa-solid fa-file-video"></i></div>
+          <p id="media-drop-text" style="font-weight: 600;">Click or Drag & Drop Video / GIF Here</p>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">MP4, MOV, WEBM, GIF supported</p>
+          <input type="file" id="media-file-input" style="display:none;" accept="video/*,image/gif,audio/*">
+          <div style="margin-top:12px; display:flex; gap:8px; align-items:center;">
+            <input id="media-url-input" type="text" placeholder="Paste a file URL (https://...)" style="flex:1; padding:10px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-color); color:var(--text-main);">
+            <button id="media-url-btn" class="btn-primary" style="padding:10px 12px; width:auto;">Fetch & Convert</button>
+          </div>
+        </div>
+
+        <div id="media-action-area" style="display:none;" class="form-group">
+          <label>Target Format</label>
+          <select id="media-format-select">
+            <option value="mp3">MP3 (.mp3)</option>
+            <option value="aac">AAC (.aac)</option>
+            <option value="wav">WAV (.wav)</option>
+            <option value="gif">GIF (.gif)</option>
+            <option value="mp4">MP4 (.mp4)</option>
+            <option value="webm">WebM (.webm)</option>
+          </select>
+
+          <button id="media-convert-btn" class="btn-primary">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Convert & Download
+          </button>
+          <div id="media-progress" style="display:none; margin-top:12px;">
+            <div style="height:10px;background:#e6e6e6;border-radius:6px;overflow:hidden;"><div id="media-progress-bar" style="width:0%;height:100%;background:linear-gradient(90deg,#60a5fa,#2563eb);"></div></div>
+            <div id="media-progress-text" style="font-size:0.85rem;color:var(--text-muted);margin-top:6px;">Preparing...</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: SETTINGS -->
+    <section id="settings-tab" class="tab-content">
+      <div class="card">
+        <div class="card-header" style="text-align: left;">
+          <h2>Application Settings</h2>
+        </div>
+        <div style="font-size: 0.85rem; space-y: 12px;">
+          <label style="display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border-color);">
+            <span>Hardware Canvas Acceleration</span>
+            <input type="checkbox" checked>
+          </label>
+          <label style="display: flex; align-items: center; justify-content: space-between; padding: 12px 0;">
+            <span>Auto-Clear Memory Cache on Exit</span>
+            <input type="checkbox" checked>
+          </label>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-container">
+      <p>© 2026 OmniConvert Studio. All conversions processed locally.</p>
+      <div>
+        <a href="#" onclick="toggleModal('privacy-modal'); return false;" style="color: var(--text-muted); text-decoration: none; margin-left: 16px;">Privacy Policy</a>
+        <a href="#" onclick="toggleModal('terms-modal'); return false;" style="color: var(--text-muted); text-decoration: none; margin-left: 16px;">Terms of Service</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- PRIVACY MODAL -->
+  <div id="privacy-modal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Privacy Policy</h3>
+        <button onclick="toggleModal('privacy-modal')" style="background:none; border:none; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5;">
+        <p><strong>Zero Upload Guarantee:</strong> Whenever conversion is performed purely in-browser (for example image-to-image conversions), files remain on your device and are not transmitted to any external servers.</p>
+        <p><strong>Server Conversion:</strong> For operations that require native ffmpeg capabilities (audio/video transcoding, GIF generation), your file is temporarily uploaded to the local server instance you run. The server performs the conversion and returns the converted file directly to your browser. Converted files and any temporary copies are deleted from the server's temporary storage immediately after the transfer completes.</p>
+        <p><strong>Telemetry & Logs:</strong> Minimal session telemetry (timing and session length) is recorded to `user_logs.txt` only when you opt into server telemetry. No file contents, filenames, or extracted media are logged by default.</p>
+        <p><strong>Third-Party Components:</strong> This application embeds third-party binaries (ffmpeg) and libraries. These components are executed locally on your machine. Review their licenses independently if required.</p>
+        <p><strong>Privacy Controls:</strong> You can opt out of server-side telemetry by disabling it in the Settings tab or by not running the server. All data processed stays under your control when you run this software locally.</p>
+      </div>
+    </div>
+  </div>
+
+      <!-- RATING MODAL (shows after first conversion) -->
+      <div id="rating-modal" class="modal hidden">
+        <div class="modal-content" style="position:relative;">
+          <div class="modal-header">
+            <h3>Rate your experience</h3>
+            <button id="rating-close" style="background:none; border:none; cursor:pointer;" disabled><i class="fa-solid fa-xmark"></i></button>
+          </div>
+          <div style="font-size:0.95rem; color:var(--text-main);">
+            <p>We'd love a quick rating. Your feedback helps improve the app. No identifiable file data is collected.</p>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <div id="star-container" style="font-size:1.6rem; color:#ffd055; cursor:pointer; user-select:none;">
+                <span data-star="1">☆</span>
+                <span data-star="2">☆</span>
+                <span data-star="3">☆</span>
+                <span data-star="4">☆</span>
+                <span data-star="5">☆</span>
+              </div>
+            </div>
+          </div>
+          <div id="rating-countdown" style="position:absolute; top:12px; right:16px; font-weight:700; color:var(--text-muted);">3</div>
+        </div>
+      </div>
+
+  <!-- TERMS MODAL -->
+  <div id="terms-modal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Terms of Service</h3>
+        <button onclick="toggleModal('terms-modal')" style="background:none; border:none; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div style="font-size: 0.85rem; color: var(--text-muted); line-height:1.5;">
+        <p><strong>Acceptance:</strong> By using this software you agree to these Terms. This software is provided to you for local media conversion and related utilities.</p>
+        <p><strong>License & Use:</strong> You are responsible for ensuring you have the rights to convert any media you provide. The authors grant you a non-exclusive license to run this software locally for personal or internal business use.</p>
+        <p><strong>No Warranty:</strong> The software is provided "as-is" without warranties. The authors are not liable for any damages resulting from use, misuse, or inability to use the software.</p>
+        <p><strong>Third-Party Software:</strong> This product uses third-party software such as ffmpeg. Such components are governed by their own licenses and may impose additional obligations.</p>
+        <p><strong>Data Handling:</strong> Uploaded files used for server-side conversion are stored temporarily and automatically removed after conversion completes. If you operate a publicly accessible server instance, you are responsible for securing it to prevent unauthorized access.</p>
+        <p><strong>Governing Law & Contact:</strong> These Terms are governed by the law where you operate the software. For questions or to report issues, open an issue in the project's repository or contact the maintainer.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPT ENGINE -->
+  <script>
+    // Theme Switcher
+    function toggleTheme() {
+      document.body.classList.toggle('dark');
+    }
+
+    // Session Telemetry & Anonymous Tracking
+    const startTime = new Date();
+    function generateId(prefix = 'u') { return prefix + '_' + Math.random().toString(36).slice(2,9); }
+    let ocUserId = localStorage.getItem('oc_user_id');
+    if (!ocUserId) { ocUserId = generateId('user'); localStorage.setItem('oc_user_id', ocUserId); }
+    let ocSessionId = sessionStorage.getItem('oc_session_id');
+    if (!ocSessionId) { ocSessionId = generateId('sess'); sessionStorage.setItem('oc_session_id', ocSessionId); }
+    let filesConverted = Number(sessionStorage.getItem('oc_files_converted') || 0);
+
+    function incrementConversion() {
+      filesConverted += 1;
+      sessionStorage.setItem('oc_files_converted', filesConverted);
+      // show rating on first conversion
+      const shown = localStorage.getItem('oc_rating_prompt_shown');
+      const rated = localStorage.getItem('oc_rated');
+      if (filesConverted === 1 && !shown && !rated) {
+        showRatingModal();
+        localStorage.setItem('oc_rating_prompt_shown', '1');
+      }
+    }
+
+    window.addEventListener('beforeunload', () => {
+      const endTime = new Date();
+      const duration = Math.round((endTime - startTime) / 1000);
+      const payload = {
+        userId: ocUserId,
+        sessionId: ocSessionId,
+        entryTime: startTime.toISOString(),
+        exitTime: endTime.toISOString(),
+        durationSeconds: duration,
+        filesConverted: filesConverted
+      };
+      try {
+        const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+        navigator.sendBeacon('/api/log-session-advanced', blob);
+      } catch (e) {
+        // fallback
+        fetch('/api/log-session-advanced', { method: 'POST', body: JSON.stringify(payload), keepalive: true, headers: { 'Content-Type': 'application/json' } }).catch(()=>{});
+      }
+    });
+
+    // Tab Switcher
+    function switchTab(tabId, btn) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      btn.classList.add('active');
+    }
+
+    function toggleModal(id) {
+      document.getElementById(id).classList.toggle('hidden');
+    }
+
+    // Image Converter Engine
+    const dropZone = document.getElementById('image-drop-zone');
+    const fileInput = document.getElementById('image-file-input');
+    const actionArea = document.getElementById('image-action-area');
+    const convertBtn = document.getElementById('image-convert-btn');
+    const formatSelect = document.getElementById('image-format-select');
+    let selectedFile = null;
+
+    dropZone.addEventListener('click', (e) => {
+      const tag = (e.target && e.target.tagName || '').toLowerCase();
+      if (tag === 'input' || tag === 'button' || tag === 'select' || e.target.closest && e.target.closest('a')) return;
+      fileInput.click();
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files.length > 0) {
+        selectedFile = e.target.files[0];
+        document.getElementById('image-drop-text').innerText = `📄 ${selectedFile.name}`;
+        actionArea.style.display = 'block';
+      }
+    });
+
+    convertBtn.addEventListener('click', () => {
+      if (!selectedFile) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+
+          const mime = formatSelect.value;
+          const ext = mime.split('/')[1];
+
+          const link = document.createElement('a');
+          link.href = canvas.toDataURL(mime, 0.9);
+          link.download = `converted-file.${ext}`;
+          link.click();
+          incrementConversion();
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(selectedFile);
+    });
+
+    // Media Converter (uploads to server /api/convert)
+    const mediaDropZone = document.getElementById('media-drop-zone');
+    const mediaFileInput = document.getElementById('media-file-input');
+    const mediaActionArea = document.getElementById('media-action-area');
+    const mediaConvertBtn = document.getElementById('media-convert-btn');
+    const mediaFormatSelect = document.getElementById('media-format-select');
+    let selectedMediaFile = null;
+
+    mediaDropZone.addEventListener('click', (e) => {
+      const tag = (e.target && e.target.tagName || '').toLowerCase();
+      if (tag === 'input' || tag === 'button' || tag === 'select' || e.target.closest && e.target.closest('a')) return;
+      mediaFileInput.click();
+    });
+
+    ['dragenter','dragover'].forEach(evt => {
+      mediaDropZone.addEventListener(evt, (e) => {
+        e.preventDefault();
+        mediaDropZone.classList.add('active');
+      });
+    });
+    ['dragleave','drop'].forEach(evt => {
+      mediaDropZone.addEventListener(evt, (e) => {
+        e.preventDefault();
+        mediaDropZone.classList.remove('active');
+      });
+    });
+
+    mediaFileInput.addEventListener('change', (e) => {
+      if (e.target.files.length > 0) {
+        selectedMediaFile = e.target.files[0];
+        document.getElementById('media-drop-text').innerText = `📄 ${selectedMediaFile.name}`;
+        mediaActionArea.style.display = 'block';
+      }
+    });
+
+    mediaDropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        selectedMediaFile = e.dataTransfer.files[0];
+        document.getElementById('media-drop-text').innerText = `📄 ${selectedMediaFile.name}`;
+        mediaActionArea.style.display = 'block';
+      }
+    });
+
+    async function uploadAndDownload(file, target) {
+      const fd = new FormData();
+      fd.append('file', file, file.name);
+      mediaConvertBtn.disabled = true;
+      mediaConvertBtn.innerText = 'Converting...';
+      const progressWrap = document.getElementById('media-progress');
+      const progressBar = document.getElementById('media-progress-bar');
+      const progressText = document.getElementById('media-progress-text');
+      progressWrap.style.display = 'block'; progressBar.style.width = '0%'; progressText.innerText = 'Uploading...';
+      try {
+        await new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open('POST', `/api/convert?target=${encodeURIComponent(target)}`);
+          xhr.responseType = 'blob';
+          xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable) {
+              const p = Math.round((e.loaded / e.total) * 50); // upload 0-50%
+              progressBar.style.width = p + '%';
+              progressText.innerText = `Uploading... ${p}%`;
+            }
+          };
+          let lastDownloadPercent = 50;
+          xhr.onprogress = (e) => {
+            if (e.lengthComputable) {
+              const p = 50 + Math.round((e.loaded / e.total) * 50); // download 50-100%
+              progressBar.style.width = p + '%';
+              progressText.innerText = `Downloading... ${p}%`;
+              lastDownloadPercent = p;
+            } else {
+              // indeterminate growth
+              lastDownloadPercent = Math.min(99, lastDownloadPercent + 1);
+              progressBar.style.width = lastDownloadPercent + '%';
+              progressText.innerText = `Downloading...`;
+            }
+          };
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              const blob = xhr.response;
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              const ext = target.startsWith('.') ? target.slice(1) : target;
+              a.download = `converted.${ext}`;
+              document.body.appendChild(a);
+              a.click();
+              a.remove();
+              URL.revokeObjectURL(url);
+              resolve();
+            } else reject(new Error('Conversion failed: ' + xhr.status));
+          };
+          xhr.onerror = () => reject(new Error('Network error'));
+          xhr.send(fd);
+        });
+        incrementConversion();
+      } catch (err) {
+        alert('Conversion error: ' + (err.message || err));
+      } finally {
+        mediaConvertBtn.disabled = false;
+        mediaConvertBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Convert & Download';
+        progressText.innerText = 'Done';
+        setTimeout(() => { progressWrap.style.display = 'none'; }, 1200);
+      }
+    }
+
+    mediaConvertBtn.addEventListener('click', () => {
+      if (!selectedMediaFile) return;
+      const target = mediaFormatSelect.value;
+      uploadAndDownload(selectedMediaFile, target);
+    });
+
+    // Image URL fetch & convert (client-side)
+    const imageUrlInput = document.getElementById('image-url-input');
+    const imageUrlBtn = document.getElementById('image-url-btn');
+    const imageFormatSelect = document.getElementById('image-format-select');
+
+    // Prevent clicks on inputs/buttons from propagating to dropzone
+    ['click','mousedown'].forEach(evt => {
+      imageUrlInput.addEventListener(evt, e => e.stopPropagation());
+      imageUrlBtn.addEventListener(evt, e => e.stopPropagation());
+    });
+
+    imageUrlBtn.addEventListener('click', async () => {
+      const url = imageUrlInput.value && imageUrlInput.value.trim();
+      if (!url) return alert('Please paste a valid image URL');
+      imageUrlBtn.disabled = true;
+      imageUrlBtn.innerText = 'Fetching...';
+      const progressWrap = document.getElementById('image-progress');
+      const progressBar = document.getElementById('image-progress-bar');
+      const progressText = document.getElementById('image-progress-text');
+      progressWrap.style.display = 'block'; progressBar.style.width = '0%'; progressText.innerText = 'Fetching...';
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Failed to fetch image');
+        const blob = await res.blob();
+        // simple animate to 80% while processing
+        let anim = setInterval(() => { progressBar.style.width = Math.min(80, (parseFloat(progressBar.style.width)||0) + 6) + '%'; }, 250);
+        const imgUrl = URL.createObjectURL(blob);
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          const mime = imageFormatSelect.value;
+          const ext = mime.split('/')[1];
+          const link = document.createElement('a');
+          link.href = canvas.toDataURL(mime, 0.9);
+          link.download = `converted-image.${ext}`;
+          link.click();
+          URL.revokeObjectURL(imgUrl);
+          clearInterval(anim);
+          progressBar.style.width = '100%'; progressText.innerText = 'Done';
+          setTimeout(() => { progressWrap.style.display = 'none'; }, 800);
+          imageUrlBtn.disabled = false;
+          imageUrlBtn.innerHTML = 'Fetch & Convert';
+          incrementConversion();
+        };
+        img.onerror = (e) => {
+          clearInterval(anim);
+          progressWrap.style.display = 'none';
+          imageUrlBtn.disabled = false;
+          imageUrlBtn.innerHTML = 'Fetch & Convert';
+          alert('Error loading image — server may block cross-origin requests. Try the Media URL option which uses server-side conversion.');
+        };
+        img.src = imgUrl;
+      } catch (err) {
+        alert('Image fetch/convert error: ' + (err.message || err));
+        progressWrap.style.display = 'none';
+        imageUrlBtn.disabled = false;
+        imageUrlBtn.innerHTML = 'Fetch & Convert';
+      }
+    });
+
+    // Handle URL-based conversions
+    const mediaUrlInput = document.getElementById('media-url-input');
+    const mediaUrlBtn = document.getElementById('media-url-btn');
+
+    ['click','mousedown'].forEach(evt => {
+      mediaUrlInput.addEventListener(evt, e => e.stopPropagation());
+      mediaUrlBtn.addEventListener(evt, e => e.stopPropagation());
+    });
+
+    mediaUrlBtn.addEventListener('click', async () => {
+      const url = mediaUrlInput.value && mediaUrlInput.value.trim();
+      if (!url) return alert('Please paste a valid URL');
+      const target = mediaFormatSelect.value;
+      mediaUrlBtn.disabled = true;
+      mediaUrlBtn.innerText = 'Fetching...';
+      const progressWrap = document.getElementById('media-progress');
+      const progressBar = document.getElementById('media-progress-bar');
+      const progressText = document.getElementById('media-progress-text');
+      progressWrap.style.display = 'block'; progressBar.style.width = '0%'; progressText.innerText = 'Fetching...';
+      let animHandle = null;
+      try {
+        // start a subtle animation while server processes
+        let p = 0;
+        animHandle = setInterval(() => { p = (p + 3) % 95; progressBar.style.width = (50 + p * 0.5) + '%'; }, 300);
+        const res = await fetch('/api/convert-url', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url, target })
+        });
+        if (!res.ok) throw new Error('Conversion failed');
+        const blob = await res.blob();
+        const urlObj = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = urlObj;
+        const ext = target.startsWith('.') ? target.slice(1) : target;
+        a.download = `converted.${ext}`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(urlObj);
+        incrementConversion();
+      } catch (err) {
+        alert('Conversion error: ' + (err.message || err));
+      } finally {
+        if (animHandle) clearInterval(animHandle);
+        progressBar.style.width = '100%'; progressText.innerText = 'Done';
+        setTimeout(() => { progressWrap.style.display = 'none'; }, 1200);
+        mediaUrlBtn.disabled = false;
+        mediaUrlBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Fetch & Convert';
+      }
+    });
+
+    // Tools panel toggle and shortcuts
+    const toolsBtn = document.getElementById('tools-menu-btn');
+    const toolsPanel = document.getElementById('tools-panel');
+    toolsBtn.addEventListener('click', (e) => {
+      const open = toolsPanel.style.display !== 'none';
+      toolsPanel.style.display = open ? 'none' : 'block';
+      toolsBtn.setAttribute('aria-expanded', String(!open));
+    });
+
+    // Close panel when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!toolsPanel || !toolsBtn) return;
+      const target = e.target;
+      if (toolsPanel.contains(target) || toolsBtn.contains(target)) return;
+      toolsPanel.style.display = 'none';
+      toolsBtn.setAttribute('aria-expanded', 'false');
+    });
+
+    // Map tool names to actions
+    const toolActions = {
+      'PNG → JPG': () => { switchTab('image-tab', document.querySelector("button[onclick*='image-tab']")); document.getElementById('image-format-select').value = 'image/jpeg'; },
+      'JPG → PNG': () => { switchTab('image-tab', document.querySelector("button[onclick*='image-tab']")); document.getElementById('image-format-select').value = 'image/png'; },
+      'WEBP → PNG': () => { switchTab('image-tab', document.querySelector("button[onclick*='image-tab']")); document.getElementById('image-format-select').value = 'image/png'; },
+      'PNG → WEBP': () => { switchTab('image-tab', document.querySelector("button[onclick*='image-tab']")); document.getElementById('image-format-select').value = 'image/webp'; },
+      'Resize / Compress': () => { switchTab('image-tab', document.querySelector("button[onclick*='image-tab']")); },
+      'MP4 → MP3 (Extract)': () => { switchTab('media-tab', document.querySelector("button[onclick*='media-tab']")); document.getElementById('media-format-select').value = 'mp3'; },
+      'MP4 → GIF': () => { switchTab('media-tab', document.querySelector("button[onclick*='media-tab']")); document.getElementById('media-format-select').value = 'gif'; },
+      'MOV → MP4': () => { switchTab('media-tab', document.querySelector("button[onclick*='media-tab']")); document.getElementById('media-format-select').value = 'mp4'; },
+      'MP4 → WEBM': () => { switchTab('media-tab', document.querySelector("button[onclick*='media-tab']")); document.getElementById('media-format-select').value = 'webm'; },
+      'Trim / Clip': () => { switchTab('media-tab', document.querySelector("button[onclick*='media-tab']")); },
+      'GIF → MP4': () => { switchTab('media-tab', document.querySelector("button[onclick*='media-tab']")); document.getElementById('media-format-select').value = 'mp4'; },
+      'GIF → WEBP': () => { switchTab('media-tab', document.querySelector("button[onclick*='media-tab']")); document.getElementById('media-format-select').value = 'webm'; },
+      'Optimize GIF': () => { switchTab('media-tab', document.querySelector("button[onclick*='media-tab']")); document.getElementById('media-format-select').value = 'gif'; },
+      'Split Frames': () => { switchTab('media-tab', document.querySelector("button[onclick*='media-tab']")); }
+    };
+
+    document.querySelectorAll('.tool-item').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const name = btn.innerText.trim();
+        const action = toolActions[name];
+        if (action) action();
+        toolsPanel.style.display = 'none';
+        toolsBtn.setAttribute('aria-expanded', 'false');
+      });
+    });
+
+    // Rating modal logic
+    const ratingModal = document.getElementById('rating-modal');
+    const ratingClose = document.getElementById('rating-close');
+    const starContainer = document.getElementById('star-container');
+    const countdownEl = document.getElementById('rating-countdown');
+
+    function showRatingModal() {
+      ratingModal.classList.remove('hidden');
+      let count = 3;
+      countdownEl.innerText = count;
+      ratingClose.disabled = true;
+      const t = setInterval(() => {
+        count -= 1;
+        countdownEl.innerText = String(count > 0 ? count : '');
+        if (count <= 0) {
+          clearInterval(t);
+          ratingClose.disabled = false;
+          countdownEl.innerText = '';
+        }
+      }, 1000);
+    }
+
+    ratingClose.addEventListener('click', () => {
+      ratingModal.classList.add('hidden');
+    });
+
+    starContainer.addEventListener('click', (e) => {
+      const star = e.target && e.target.getAttribute && e.target.getAttribute('data-star');
+      if (!star) return;
+      const rating = Number(star);
+      // visual fill
+      [...starContainer.querySelectorAll('span')].forEach(s => {
+        const n = Number(s.getAttribute('data-star'));
+        s.innerText = n <= rating ? '★' : '☆';
+      });
+      // send rating
+      fetch('/api/rating', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: ocUserId, sessionId: ocSessionId, rating, timestamp: new Date().toISOString() })
+      }).catch(()=>{});
+      localStorage.setItem('oc_rated', '1');
+      ratingModal.classList.add('hidden');
+    });
+  </script>
+</body>
+</html>
